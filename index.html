@@ -483,7 +483,7 @@ function showSessionPicker(date, suggested) {
       <button id="pk-start" class="btn btn-primary" style="width:100%">Démarrer Séance ${sel}</button>
     `;
     m.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{ sel=b.dataset.s; render(); }));
-    m.querySelector('#pk-start').addEventListener('click',()=>{ S.trainingDate=date; S.trainingSeance=sel; closeModal(); nav('training'); });
+    m.querySelector('#pk-start').addEventListener('click',()=>{ S.trainingDate=date>todayStr()?todayStr():date; S.trainingSeance=sel; closeModal(); nav('training'); });
   }
 
   render();
@@ -645,8 +645,13 @@ function showExercise() {
     nb.innerHTML=`${truncate(nextEx.name,14)} ${ico('chevright')}`;
     nb.addEventListener('click',()=>{ S.exId=nextEx.id; showExercise(); });
     nr.appendChild(nb);
+  } else {
+    const fb=el('button','btn btn-primary'); fb.style.flex='1';
+    fb.innerHTML=`${ico('check')} Terminer la séance`;
+    fb.addEventListener('click',()=>{ S.trainingDate=null; S.trainingSeance=null; nav('calendar'); });
+    nr.appendChild(fb);
   }
-  if (prevEx||nextEx) c.appendChild(nr);
+  c.appendChild(nr);
   renderNav('training');
 
   sc.querySelectorAll('.chk-btn').forEach(btn=>{

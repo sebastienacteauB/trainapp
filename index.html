@@ -40,7 +40,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .card{background:var(--bg2);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:10px}
 .card-row{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;transition:background .1s}
 .card-row:active{background:var(--bg3)}
-.ex-badge{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;background:var(--bg3);color:var(--text)}
+.ex-badge{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;background:var(--bg3);color:var(--text)}
 .ex-badge.done{background:var(--ok-bg);color:#166534}
 .ex-badge.sa{background:var(--clrA2);color:var(--clrA);border:1px solid var(--clrA3)}
 .ex-badge.sb{background:var(--clrB2);color:var(--clrB);border:1px solid var(--clrB3)}
@@ -94,6 +94,8 @@ textarea.f-input{resize:vertical;min-height:68px;line-height:1.5}
 .back-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .next-btn{background:none;border:none;color:var(--text2);cursor:pointer;padding:4px;display:flex;align-items:center;margin-left:4px}
 .next-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* CALENDAR NEXT-UP */
+.cal-day.next-up{border:1.5px dashed var(--accent);border-radius:8px}
 /* CALENDAR */
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .cal-nav-btn{background:none;border:none;color:var(--text2);cursor:pointer;padding:8px;border-radius:var(--rr);display:flex;align-items:center;transition:background .15s}
@@ -158,22 +160,24 @@ const MONTHS     = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct
 const MONTHS_F   = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const CATCHUP    = 5;
 const SEB_EMAIL  = 'sebastien.acteau@bercomac.com';
+const PROG_VER   = 2;
 
 const SEB_A = [
   {id:'hip-thrust',name:'GD Hip Thrust',sets:3,repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:"Possibilité de mettre un DB sur les hanches ou de le faire à une jambe.",workingMax:64,dbId:'Barbell_Hip_Thrust',ytId:''},
-  {id:'push-up',name:'Push-Up',sets:3,repsMin:8,repsMax:12,tempo:'3-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:"Si trop facile pour 12 reps, surélever les pieds et ralentir le tempo!",workingMax:null,dbId:'Push-Ups_With_Feet_Elevated',ytId:''},
+  {id:'chest-press',name:'GD Chest Press',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:null,dbId:'Dumbbell_Bench_Press',ytId:''},
   {id:'weighted-crunch',name:'GD Weighted Crunch',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-0',rir:'1–4',restMin:2,restMax:3,notes:"Coudes vers l'extérieur, penser à ramener les omoplates ensemble.",workingMax:21,dbId:'Weighted_Crunches',ytId:''},
   {id:'db-row',name:'Bent Over DB Row',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:"Coudes vers l'extérieur, penser à ramener les omoplates ensemble.",workingMax:57,dbId:'Bent_Over_Two-Dumbbell_Row',ytId:''},
-  {id:'lateral-raise',name:'GD Lateral Raise (DB)',sets:'2–3',repsMin:8,repsMax:12,tempo:'1-1-1-0',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:38,dbId:'Side_Lateral_Raise',ytId:''},
-  {id:'bicep-curl',name:'GD Bicep Curl',sets:'2–3',repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:32,dbId:'Dumbbell_Bicep_Curl',ytId:''}
+  {id:'lateral-raise',name:'GD Lateral Raise (DB)',sets:3,repsMin:8,repsMax:12,tempo:'1-1-1-0',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:38,dbId:'Side_Lateral_Raise',ytId:''},
+  {id:'bicep-curl',name:'GD Bicep Curl',sets:3,repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:32,dbId:'Dumbbell_Bicep_Curl',ytId:''}
 ];
 const SEB_B = [
-  {id:'pistol-squat',name:'Pistol Squat',sets:2,repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:"Utiliser un banc pour s'aider + aide pour l'équilibre au besoin.",workingMax:null,dbId:'',ytId:''},
-  {id:'pike-pushup',name:'Pike Pushup',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-0',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:null,dbId:'',ytId:''},
+  {id:'goblet-squat',name:'Goblet Squat',sets:2,repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:35,dbId:'Dumbbell_Goblet_Squat',ytId:''},
+  {id:'shoulder-press',name:'GD Shoulder Press',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:45,dbId:'Seated_Dumbbell_Shoulder_Press',ytId:''},
   {id:'bulgarian',name:'GD Bulgarian Split Squat',sets:2,repsMin:8,repsMax:12,tempo:'3-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:53,dbId:'',ytId:''},
-  {id:'chest-fly',name:'GD Chest Fly',sets:'2–3',repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'Couché au sol, avec DB.',workingMax:57,dbId:'',ytId:''},
-  {id:'tricep-ext',name:'Lying Tricep Extension',sets:'2–3',repsMin:8,repsMax:12,tempo:'1-1-1-0',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:50,dbId:'Lying_Dumbbell_Tricep_Extension',ytId:''},
-  {id:'garhammer',name:'GD Garhammer',sets:'2–3',repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:"Utiliser un divan pour se tenir au sol.",workingMax:null,dbId:'',ytId:''}
+  {id:'chest-fly',name:'GD Chest Fly',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'Couché au sol, avec DB.',workingMax:45,dbId:'',ytId:''},
+  {id:'tricep-ext',name:'Lying Tricep Extension',sets:3,repsMin:8,repsMax:12,tempo:'1-1-1-0',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:50,dbId:'Lying_Dumbbell_Tricep_Extension',ytId:''},
+  {id:'garhammer',name:'GD Garhammer',sets:3,repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:"Utiliser un divan pour se tenir au sol.",workingMax:null,dbId:'',ytId:''},
+  {id:'upper-back-row',name:'GD Upper Back Cable Row',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:null,dbId:'',ytId:''}
 ];
 const SEB_LOGS = [
   {id:'2026-10-19-A',date:'2026-10-19',seance:'A',sets:{'hip-thrust':[{r:12,w:45},{r:12,w:45}],'push-up':[{r:12,w:0},{r:12,w:0},{r:12,w:0}],'weighted-crunch':[{r:10,w:6},{r:6,w:6},{r:6,w:6}],'db-row':[{r:12,w:40},{r:12,w:40},{r:12,w:40}]},totalReps:117,totalLb:2607},
@@ -272,7 +276,7 @@ function buildProfile(user) {
     name:'Sébastien',initials:'SA',color:'#6366f1',
     startDate:'2026-09-21',trainingDays:[1,3,5],
     notes:"Modèle progression double : 10–12 reps → augmenter la charge ; 6–8 reps → chercher plus de reps. RIR cible 2–3, éviter 0.",
-    seances:{A:SEB_A,B:SEB_B},logs:SEB_LOGS
+    seances:{A:SEB_A,B:SEB_B},logs:SEB_LOGS,programVersion:PROG_VER
   };
   const dn = user.displayName||'Utilisateur';
   return {
@@ -422,6 +426,19 @@ function showCalendar() {
 
   for (let i=0;i<firstDow;i++) grid.appendChild(el('div','cal-day'));
 
+  const nextUpDs=(()=>{
+    const startD=new Date(Math.max(now.getTime(),new Date(year,month,1).getTime()));
+    for(let i=0;i<=31;i++){
+      const d=new Date(startD);d.setDate(startD.getDate()+i);
+      if(d.getFullYear()!==year||d.getMonth()!==month) break;
+      const ds=d.toISOString().slice(0,10);
+      if(ds===today) continue;
+      const s=seanceForDate(p,ds);
+      if(s&&!(p.logs||[]).find(l=>l.date===ds)) return ds;
+    }
+    return null;
+  })();
+
   for (let d=1;d<=dim;d++) {
     const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday=ds===today;
@@ -431,17 +448,19 @@ function showCalendar() {
     const planned=seanceForDate(p,ds);
     const log=(p.logs||[]).find(l=>l.date===ds);
     const isCatchup=isPast&&!log&&planned&&diff<=CATCHUP;
+    const isNextUp=ds===nextUpDs;
 
-    let hasEv=!!(log||(isCatchup)||(!isPast&&planned));
-    const cell=el('div',`cal-day${isToday?' today':''}${hasEv?' has-ev':''}`);
+    let hasEv=!!(log||(isPast&&planned)||(!isPast&&planned));
+    const cell=el('div',`cal-day${isToday?' today':''}${isNextUp?' next-up':''}${hasEv?' has-ev':''}`);
     const num=el('div','cal-day-num'); num.textContent=d; cell.appendChild(num);
 
     if (log) {
       const b=el('div',`cal-badge d${log.seance}`); b.textContent=log.seance; cell.appendChild(b);
       const st=el('div','cal-stat ok'); st.textContent='✓'; cell.appendChild(st);
       cell.addEventListener('click',()=>showLogModal(log));
-    } else if (isCatchup) {
-      const b=el('div','cal-badge cup'); b.textContent=planned; cell.appendChild(b);
+    } else if (isPast&&planned) {
+      const b=el('div',`cal-badge ${isCatchup?'cup':'p'+planned}`); b.textContent=planned; cell.appendChild(b);
+      if(!isCatchup) b.style.opacity='.4';
       cell.addEventListener('click',()=>showSessionPicker(ds,planned));
     } else if (!isPast&&planned) {
       const b=el('div',`cal-badge p${planned}`); b.textContent=planned; cell.appendChild(b);
@@ -536,10 +555,10 @@ function showTraining() {
     const lp=lastSets(p,ex.id);
     const card=el('div','card');
     const row=el('div','card-row');
-    const summary=done?done.map(s=>`${s.r}×${s.w}lb`).join(', '):`${ex.sets} sets · ${ex.repsMin}–${ex.repsMax} reps`;
+    const summary=done?done.map(s=>`${s.r}×${s.w}lb`).join(' · '):`${ex.sets} sets · ${ex.repsMin}–${ex.repsMax} reps`;
     row.innerHTML=`<div class="ex-badge ${done?'done':sc}">${done?ico('check'):letter}</div>
-      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.name}</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:2px">${summary}</div></div>
+      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.name}</div>
+      <div style="font-size:12px;color:${done?'var(--ok)':'var(--text2)'};margin-top:2px">${summary}</div></div>
       ${ico('chevright').replace('<svg','<svg style="width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:2;flex-shrink:0"')}`;
     row.addEventListener('click',()=>{ S.exId=ex.id; nav('exercise'); });
     card.appendChild(row);
@@ -864,9 +883,9 @@ onAuthStateChanged(auth, async (user) => {
       if (!snap.exists()) await setDoc(doc(db,'users',user.uid),S.profile);
       else if (user.email===SEB_EMAIL) {
         const p=S.profile;
-        const needsMigration=!p.seances||!p.seances.A||p.seances.A.length===0;
-        if (needsMigration) {
+        if (!p.programVersion||p.programVersion<PROG_VER) {
           p.seances={A:SEB_A,B:SEB_B};
+          p.programVersion=PROG_VER;
           if (!p.logs||p.logs.length===0) p.logs=SEB_LOGS;
           await setDoc(doc(db,'users',user.uid),p);
         }

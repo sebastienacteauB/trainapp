@@ -160,24 +160,24 @@ const MONTHS     = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct
 const MONTHS_F   = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const CATCHUP    = 5;
 const SEB_EMAIL  = 'sebastien.acteau@bercomac.com';
-const PROG_VER   = 2;
+const PROG_VER   = 3;
 
 const SEB_A = [
-  {id:'hip-thrust',name:'GD Hip Thrust',sets:3,repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:"Possibilité de mettre un DB sur les hanches ou de le faire à une jambe.",workingMax:64,dbId:'Barbell_Hip_Thrust',ytId:''},
-  {id:'chest-press',name:'GD Chest Press',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:null,dbId:'Dumbbell_Bench_Press',ytId:''},
-  {id:'weighted-crunch',name:'GD Weighted Crunch',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-0',rir:'1–4',restMin:2,restMax:3,notes:"Coudes vers l'extérieur, penser à ramener les omoplates ensemble.",workingMax:21,dbId:'Weighted_Crunches',ytId:''},
-  {id:'db-row',name:'Bent Over DB Row',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:"Coudes vers l'extérieur, penser à ramener les omoplates ensemble.",workingMax:57,dbId:'Bent_Over_Two-Dumbbell_Row',ytId:''},
-  {id:'lateral-raise',name:'GD Lateral Raise (DB)',sets:3,repsMin:8,repsMax:12,tempo:'1-1-1-0',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:38,dbId:'Side_Lateral_Raise',ytId:''},
-  {id:'bicep-curl',name:'GD Bicep Curl',sets:3,repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:32,dbId:'Dumbbell_Bicep_Curl',ytId:''}
+  {id:'hip-thrust',name:'GD Hip Thrust',sets:3,repsMin:8,repsMax:12,notes:"Possibilité de mettre un DB sur les hanches ou de le faire à une jambe.",workingMax:64,dbId:'Barbell_Hip_Thrust',ytId:''},
+  {id:'chest-press',name:'GD Chest Press',sets:3,repsMin:8,repsMax:12,notes:'',workingMax:null,dbId:'Dumbbell_Bench_Press',ytId:''},
+  {id:'weighted-crunch',name:'GD Weighted Crunch',sets:3,repsMin:8,repsMax:12,notes:"Coudes vers l'extérieur, penser à ramener les omoplates ensemble.",workingMax:21,dbId:'Weighted_Crunches',ytId:''},
+  {id:'db-row',name:'Bent Over DB Row',sets:3,repsMin:8,repsMax:12,notes:"Coudes vers l'extérieur, penser à ramener les omoplates ensemble.",workingMax:57,dbId:'Bent_Over_Two-Dumbbell_Row',ytId:''},
+  {id:'lateral-raise',name:'GD Lateral Raise (DB)',sets:3,repsMin:8,repsMax:12,notes:'',workingMax:38,dbId:'Side_Lateral_Raise',ytId:''},
+  {id:'bicep-curl',name:'GD Bicep Curl',sets:3,repsMin:8,repsMax:12,notes:'',workingMax:32,dbId:'Dumbbell_Bicep_Curl',ytId:''}
 ];
 const SEB_B = [
-  {id:'goblet-squat',name:'Goblet Squat',sets:2,repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:35,dbId:'Dumbbell_Goblet_Squat',ytId:''},
-  {id:'shoulder-press',name:'GD Shoulder Press',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:45,dbId:'Seated_Dumbbell_Shoulder_Press',ytId:''},
-  {id:'bulgarian',name:'GD Bulgarian Split Squat',sets:2,repsMin:8,repsMax:12,tempo:'3-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:53,dbId:'',ytId:''},
-  {id:'chest-fly',name:'GD Chest Fly',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'Couché au sol, avec DB.',workingMax:45,dbId:'',ytId:''},
-  {id:'tricep-ext',name:'Lying Tricep Extension',sets:3,repsMin:8,repsMax:12,tempo:'1-1-1-0',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:50,dbId:'Lying_Dumbbell_Tricep_Extension',ytId:''},
-  {id:'garhammer',name:'GD Garhammer',sets:3,repsMin:8,repsMax:12,tempo:'2-.5-1-1',rir:'1–4',restMin:2,restMax:3,notes:"Utiliser un divan pour se tenir au sol.",workingMax:null,dbId:'',ytId:''},
-  {id:'upper-back-row',name:'GD Upper Back Cable Row',sets:3,repsMin:8,repsMax:12,tempo:'2-1-1-.5',rir:'1–4',restMin:2,restMax:3,notes:'',workingMax:null,dbId:'',ytId:''}
+  {id:'goblet-squat',name:'Goblet Squat',sets:2,repsMin:8,repsMax:12,notes:'',workingMax:35,dbId:'Dumbbell_Goblet_Squat',ytId:''},
+  {id:'shoulder-press',name:'GD Shoulder Press',sets:3,repsMin:8,repsMax:12,notes:'',workingMax:45,dbId:'Seated_Dumbbell_Shoulder_Press',ytId:''},
+  {id:'bulgarian',name:'GD Bulgarian Split Squat',sets:2,repsMin:8,repsMax:12,notes:'',workingMax:53,dbId:'',ytId:''},
+  {id:'chest-fly',name:'GD Chest Fly',sets:3,repsMin:8,repsMax:12,notes:'Couché au sol, avec DB.',workingMax:45,dbId:'',ytId:''},
+  {id:'tricep-ext',name:'Lying Tricep Extension',sets:3,repsMin:8,repsMax:12,notes:'',workingMax:50,dbId:'Lying_Dumbbell_Tricep_Extension',ytId:''},
+  {id:'garhammer',name:'GD Garhammer',sets:3,repsMin:8,repsMax:12,notes:"Utiliser un divan pour se tenir au sol.",workingMax:null,dbId:'',ytId:''},
+  {id:'upper-back-row',name:'GD Upper Back Cable Row',sets:3,repsMin:8,repsMax:12,notes:'',workingMax:null,dbId:'',ytId:''}
 ];
 const SEB_LOGS = [
   {id:'2026-10-19-A',date:'2026-10-19',seance:'A',sets:{'hip-thrust':[{r:12,w:45},{r:12,w:45}],'push-up':[{r:12,w:0},{r:12,w:0},{r:12,w:0}],'weighted-crunch':[{r:10,w:6},{r:6,w:6},{r:6,w:6}],'db-row':[{r:12,w:40},{r:12,w:40},{r:12,w:40}]},totalReps:117,totalLb:2607},
@@ -617,7 +617,7 @@ function showExercise() {
   }
 
   const chips=el('div','chips');
-  chips.innerHTML=`<span class="chip">${ex.sets} sets</span><span class="chip">${ex.repsMin}–${ex.repsMax} reps</span><span class="chip">Tempo ${ex.tempo}</span><span class="chip">RIR ${ex.rir}</span><span class="chip">Repos ${ex.restMin}–${ex.restMax} min</span>${ex.workingMax?`<span class="chip wm" id="wm-chip">WM ${ex.workingMax} lb</span>`:''}`;
+  chips.innerHTML=`<span class="chip">${ex.sets} sets</span><span class="chip">${ex.repsMin}–${ex.repsMax} reps</span>${ex.workingMax?`<span class="chip wm" id="wm-chip">WM ${ex.workingMax} lb</span>`:''}`;
   c.appendChild(chips);
 
   if (ex.notes) {
@@ -691,6 +691,13 @@ function showExercise() {
         lg.sets[ex.id][i]={r,w};
         btn.classList.add('done'); rIn.classList.add('ck'); wIn.classList.add('ck');
         $i(`sr-${i}`).style.opacity='.8';
+        if (w>0 && w>(ex.workingMax||0)) {
+          ex.workingMax=w;
+          const chip=$i('wm-chip');
+          if (chip) chip.textContent=`WM ${w} lb`;
+          else { const nc=el('span','chip wm'); nc.id='wm-chip'; nc.textContent=`WM ${w} lb`; c.querySelector('.chips').appendChild(nc); }
+          $i('wm-inp').value=w;
+        }
       }
       const t=calcTotals(lg.sets); lg.totalReps=t.reps; lg.totalLb=t.lb;
       scheduleSave();
@@ -743,7 +750,7 @@ function showProgram() {
     const sc=S.progTab==='A'?'sa':'sb';
     const card=el('div','card'); card.style.marginBottom='8px';
     const row=el('div','card-row'); row.style.cursor='default';
-    row.innerHTML=`<div class="ex-badge ${sc}">${letter}</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.name}</div><div style="font-size:12px;color:var(--text2)">${ex.sets} sets · ${ex.repsMin}–${ex.repsMax} reps · ${ex.tempo}</div></div><button class="btn btn-ghost edit-btn" data-id="${ex.id}" style="padding:6px 10px;font-size:12px;flex-shrink:0">${ico('edit')} Modifier</button>`;
+    row.innerHTML=`<div class="ex-badge ${sc}">${letter}</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.name}</div><div style="font-size:12px;color:var(--text2)">${ex.sets} sets · ${ex.repsMin}–${ex.repsMax} reps${ex.workingMax?` · WM ${ex.workingMax} lb`:''}</div></div><button class="btn btn-ghost edit-btn" data-id="${ex.id}" style="padding:6px 10px;font-size:12px;flex-shrink:0">${ico('edit')} Modifier</button>`;
     card.appendChild(row);
     c.appendChild(card);
   });
@@ -789,17 +796,9 @@ function showExModal(exId) {
     <div class="f-group"><label class="f-label">Sets</label><input id="f-sets" class="f-input" value="${ex?ex.sets:'3'}" placeholder="3 ou 2–3"></div>
     <div class="f-group"><label class="f-label">Reps min / max</label><div style="display:flex;gap:6px"><input id="f-rmin" type="number" class="f-input" value="${ex?ex.repsMin:8}"><input id="f-rmax" type="number" class="f-input" value="${ex?ex.repsMax:12}"></div></div>
   </div>
-  <div class="f-row">
-    <div class="f-group"><label class="f-label">Tempo</label><input id="f-tempo" class="f-input" value="${ex?ex.tempo:''}" placeholder="2-1-1-0"></div>
-    <div class="f-group"><label class="f-label">RIR</label><input id="f-rir" class="f-input" value="${ex?ex.rir:'1–4'}"></div>
-  </div>
-  <div class="f-row">
-    <div class="f-group"><label class="f-label">Repos min (min)</label><input id="f-restmin" type="number" class="f-input" value="${ex?ex.restMin:2}"></div>
-    <div class="f-group"><label class="f-label">Repos max (min)</label><input id="f-restmax" type="number" class="f-input" value="${ex?ex.restMax:3}"></div>
-  </div>
   <div class="f-group"><label class="f-label">Working Max (lb)</label><input id="f-wm" type="number" class="f-input" value="${ex&&ex.workingMax?ex.workingMax:''}"></div>
   <div class="f-group"><label class="f-label">Notes du coach</label><textarea id="f-notes" class="f-input">${ex?ex.notes:''}</textarea></div>
-  <div class="f-group"><label class="f-label">Exercise DB ID <span style="color:var(--text3);font-size:10px">(images démo)</span></label><input id="f-dbid" class="f-input" value="${ex?ex.dbId:''}" autocomplete="off"></div>
+  <div class="f-group"><label class="f-label">Exercise DB ID <span style="color:var(--text3);font-size:10px">(images démo — <a href="https://github.com/yuhonas/free-exercise-db/tree/main/exercises" target="_blank" style="color:var(--accent)">voir la liste</a>)</span></label><input id="f-dbid" class="f-input" value="${ex?ex.dbId:''}" autocomplete="off" placeholder="ex: Dumbbell_Bench_Press"></div>
   ${!isNew?`<button id="del-ex" class="btn btn-danger" style="width:100%;margin-bottom:10px">${ico('trash')} Supprimer</button>`:''}
   <button id="save-ex" class="btn btn-primary" style="width:100%">${isNew?ico('plus')+' Ajouter':ico('check')+' Sauvegarder'}</button>`;
   ov.appendChild(m);
@@ -809,7 +808,7 @@ function showExModal(exId) {
   $i('save-ex').addEventListener('click',()=>{
     const name=$i('f-name').value.trim();
     if (!name) { $i('f-name').focus(); return; }
-    const data={id:ex?ex.id:genId(),name,sets:$i('f-sets').value||'3',repsMin:parseInt($i('f-rmin').value)||8,repsMax:parseInt($i('f-rmax').value)||12,tempo:$i('f-tempo').value,rir:$i('f-rir').value,restMin:parseInt($i('f-restmin').value)||2,restMax:parseInt($i('f-restmax').value)||3,workingMax:parseFloat($i('f-wm').value)||null,notes:$i('f-notes').value,dbId:$i('f-dbid').value.trim(),ytId:''};
+    const data={id:ex?ex.id:genId(),name,sets:$i('f-sets').value||'3',repsMin:parseInt($i('f-rmin').value)||8,repsMax:parseInt($i('f-rmax').value)||12,workingMax:parseFloat($i('f-wm').value)||null,notes:$i('f-notes').value,dbId:$i('f-dbid').value.trim(),ytId:''};
     if (!p.seances[S.progTab]) p.seances[S.progTab]=[];
     if (isNew) p.seances[S.progTab].push(data);
     else { const idx=exercises.findIndex(e=>e.id===exId); if(idx!==-1) exercises[idx]=data; }

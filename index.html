@@ -219,6 +219,20 @@ function parseSetsMax(v) {
 }
 function genId() { return 'ex-'+Date.now()+'-'+Math.random().toString(36).slice(2,6); }
 function truncate(s,n) { return s.length>n ? s.slice(0,n)+'…' : s; }
+function compressImg(file,maxW=480,q=0.78){
+  return new Promise(resolve=>{
+    const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const scale=Math.min(1,maxW/img.width);
+      const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      resolve(cv.toDataURL('image/jpeg',q));
+    };
+    img.src=url;
+  });
+}
 
 function seanceForDate(p, ds) {
   const start = new Date(p.startDate+'T12:00:00');
@@ -606,13 +620,17 @@ function showExercise() {
   const c=el('div','screen');
   a.appendChild(c);
 
-  if (ex.dbId) {
+  if (ex.customImg) {
+    const dr=el('div','demo-row');
+    dr.innerHTML=`<img class="demo-img" src="${ex.customImg}" alt="Démo" style="flex:1;max-height:200px;object-fit:cover;border-radius:8px">`;
+    c.appendChild(dr);
+  } else if (ex.dbId) {
     const dr=el('div','demo-row');
     dr.innerHTML=`<img class="demo-img" src="${IMG_BASE}${ex.dbId}/0.jpg" loading="lazy" onerror="this.parentNode.innerHTML='<div class=demo-ph>Image non disponible</div>'" alt="Départ"><img class="demo-img" src="${IMG_BASE}${ex.dbId}/1.jpg" loading="lazy" onerror="this.style.display='none'" alt="Arrivée">`;
     c.appendChild(dr);
   } else {
     const ph=el('div','demo-row');
-    ph.innerHTML=`<div class="demo-ph" style="flex:1;aspect-ratio:3/1"><div style="font-size:20px;margin-bottom:6px">💪</div><div>Aucune démo — ajoute un ID dans Programme</div></div>`;
+    ph.innerHTML=`<div class="demo-ph" style="flex:1;aspect-ratio:3/1"><div style="font-size:20px;margin-bottom:6px">💪</div><div>Aucune démo — ajoute une image dans Programme</div></div>`;
     c.appendChild(ph);
   }
 
@@ -790,6 +808,7 @@ function showExModal(exId) {
   const isNew=!ex;
   const ov=el('div','modal-ov'); ov.id='modal-ov';
   const m=el('div','modal');
+  let pendingImg=ex?ex.customImg||null:null;
   m.innerHTML=`<div style="display:flex;align-items:center;margin-bottom:16px"><div class="modal-title" style="flex:1;margin:0">${isNew?'Ajouter un exercice':'Modifier l\'exercice'}</div><button id="m-close" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px;line-height:1">✕</button></div>
   <div class="f-group"><label class="f-label">Nom *</label><input id="f-name" class="f-input" value="${ex?ex.name:''}" placeholder="ex: GD Hip Thrust" autocomplete="off"></div>
   <div class="f-row">
@@ -799,16 +818,41 @@ function showExModal(exId) {
   <div class="f-group"><label class="f-label">Working Max (lb)</label><input id="f-wm" type="number" class="f-input" value="${ex&&ex.workingMax?ex.workingMax:''}"></div>
   <div class="f-group"><label class="f-label">Notes du coach</label><textarea id="f-notes" class="f-input">${ex?ex.notes:''}</textarea></div>
   <div class="f-group"><label class="f-label">Exercise DB ID <span style="color:var(--text3);font-size:10px">(images démo — <a href="https://github.com/yuhonas/free-exercise-db/tree/main/exercises" target="_blank" style="color:var(--accent)">voir la liste</a>)</span></label><input id="f-dbid" class="f-input" value="${ex?ex.dbId:''}" autocomplete="off" placeholder="ex: Dumbbell_Bench_Press"></div>
+  <div class="f-group"><label class="f-label">Image personnalisée <span style="color:var(--text3);font-size:10px">(remplace le DB ID)</span></label>
+    <div id="img-preview" style="margin-bottom:8px;border-radius:8px;overflow:hidden;background:var(--bg3);min-height:48px;display:flex;align-items:center;justify-content:center">
+      ${ex&&ex.customImg?`<img src="${ex.customImg}" style="width:100%;max-height:160px;object-fit:cover">`:`<span style="font-size:12px;color:var(--text3);padding:12px">Aucune image</span>`}
+    </div>
+    <input type="file" id="f-img" accept="image/*" capture="environment" style="display:none">
+    <div style="display:flex;gap:8px">
+      <button type="button" id="img-pick" class="btn btn-ghost" style="flex:1;font-size:13px">📷 Choisir / prendre une photo</button>
+      <button type="button" id="img-clear" class="btn btn-ghost" style="padding:8px 10px;color:var(--err);font-size:13px${ex&&ex.customImg?'':';display:none'}">✕</button>
+    </div>
+  </div>
   ${!isNew?`<button id="del-ex" class="btn btn-danger" style="width:100%;margin-bottom:10px">${ico('trash')} Supprimer</button>`:''}
   <button id="save-ex" class="btn btn-primary" style="width:100%">${isNew?ico('plus')+' Ajouter':ico('check')+' Sauvegarder'}</button>`;
   ov.appendChild(m);
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{ if(e.target===ov) closeModal(); });
   $i('m-close').addEventListener('click',closeModal);
+  $i('img-pick').addEventListener('click',()=>$i('f-img').click());
+  $i('f-img').addEventListener('change',async e=>{
+    const file=e.target.files[0]; if(!file) return;
+    $i('img-pick').textContent='⏳ Compression…'; $i('img-pick').disabled=true;
+    pendingImg=await compressImg(file);
+    $i('img-preview').innerHTML=`<img src="${pendingImg}" style="width:100%;max-height:160px;object-fit:cover">`;
+    $i('img-pick').textContent='📷 Changer l\'image'; $i('img-pick').disabled=false;
+    $i('img-clear').style.display='';
+  });
+  $i('img-clear').addEventListener('click',()=>{
+    pendingImg=null;
+    $i('img-preview').innerHTML=`<span style="font-size:12px;color:var(--text3);padding:12px">Aucune image</span>`;
+    $i('img-clear').style.display='none';
+    $i('f-img').value='';
+  });
   $i('save-ex').addEventListener('click',()=>{
     const name=$i('f-name').value.trim();
     if (!name) { $i('f-name').focus(); return; }
-    const data={id:ex?ex.id:genId(),name,sets:$i('f-sets').value||'3',repsMin:parseInt($i('f-rmin').value)||8,repsMax:parseInt($i('f-rmax').value)||12,workingMax:parseFloat($i('f-wm').value)||null,notes:$i('f-notes').value,dbId:$i('f-dbid').value.trim(),ytId:''};
+    const data={id:ex?ex.id:genId(),name,sets:$i('f-sets').value||'3',repsMin:parseInt($i('f-rmin').value)||8,repsMax:parseInt($i('f-rmax').value)||12,workingMax:parseFloat($i('f-wm').value)||null,notes:$i('f-notes').value,dbId:$i('f-dbid').value.trim(),customImg:pendingImg,ytId:''};
     if (!p.seances[S.progTab]) p.seances[S.progTab]=[];
     if (isNew) p.seances[S.progTab].push(data);
     else { const idx=exercises.findIndex(e=>e.id===exId); if(idx!==-1) exercises[idx]=data; }

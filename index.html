@@ -21,7 +21,7 @@
   --clrB:#9333ea;--clrB2:rgba(147,51,234,.12);--clrB3:rgba(147,51,234,.28);
   --border:rgba(0,0,0,0.08);
   --r:12px;--rr:8px;
-  --navh:64px;--hdrh:56px;
+  --navh:64px;--hdrh:56px;--ex-navh:60px;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.5;overscroll-behavior:none}
 #app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
@@ -63,6 +63,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .tot-card{flex:1;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border);padding:10px 12px;text-align:center}
 .tot-val{font-size:20px;font-weight:600}
 .tot-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.ex-nav{position:fixed;bottom:var(--navh);left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg2);border-top:1px solid var(--border);display:flex;gap:8px;z-index:25;padding:8px 12px;box-shadow:0 -2px 10px rgba(0,0,0,.07)}
 .demo-row{display:flex;gap:8px;padding:12px 14px 4px}
 .demo-img{flex:1;aspect-ratio:4/3;object-fit:cover;border-radius:var(--rr);background:var(--bg3);min-width:0}
 .demo-ph{flex:1;aspect-ratio:4/3;border-radius:var(--rr);background:var(--bg3);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);font-size:11px;text-align:center;padding:8px}
@@ -643,18 +644,17 @@ function showExercise() {
   const hdr=el('div','hdr');
   hdr.innerHTML=`<button class="back-btn" id="back">${ico('back')}</button>
     <div style="flex:1"><div class="hdr-title" style="font-size:15px">${ex.name}</div>
-    <div class="hdr-sub"><span class="seance-pill ${seance}">Séance ${seance}</span><span>${exIdx+1}/${exercises.length}</span></div></div>
-    ${nextEx?`<button class="next-btn" id="ex-next">${ico('chevright')}</button>`:''}`;
+    <div class="hdr-sub"><span class="seance-pill ${seance}">Séance ${seance}</span><span>${exIdx+1}/${exercises.length}</span></div></div>`;
   a.appendChild(hdr);
   $i('back').addEventListener('click',()=>nav('training'));
-  if (nextEx) $i('ex-next').addEventListener('click',()=>{ S.exId=nextEx.id; showExercise(); });
 
   const c=el('div','screen');
+  c.style.paddingBottom=`calc(var(--navh) + var(--ex-navh) + 16px)`;
   a.appendChild(c);
 
   if (ex.customImg) {
     const dr=el('div','demo-row');
-    dr.innerHTML=`<img class="demo-img" src="${ex.customImg}" alt="Démo" style="flex:1;max-height:200px;object-fit:cover;border-radius:8px">`;
+    dr.innerHTML=`<img src="${ex.customImg}" alt="Démo" style="width:100%;max-height:240px;object-fit:contain;border-radius:8px;background:var(--bg3)">`;
     c.appendChild(dr);
   } else if (ex.dbId) {
     const dr=el('div','demo-row');
@@ -686,7 +686,7 @@ function showExercise() {
   for (let i=0;i<numSets;i++) {
     const saved=existSets[i], prev=lp&&lp[i], ck=!!saved;
     const row=el('div','set-grid'); row.id=`sr-${i}`;
-    row.innerHTML=`<div class="set-lbl">${i+1}</div><input id="r-${i}" type="number" min="0" max="99" inputmode="numeric" class="set-inp${ck?' ck':''}" value="${ck?saved.r:(prev?prev.r:'')}" placeholder="${ex.repsMin}"><input id="w-${i}" type="number" min="0" max="999" step="2.5" inputmode="decimal" class="set-inp${ck?' ck':''}" value="${ck?saved.w:(prev?prev.w:'0')}" placeholder="lb"><button class="chk-btn${ck?' done':''}" data-i="${i}">${ico('check')}</button>`;
+    row.innerHTML=`<div class="set-lbl">${i+1}</div><input id="r-${i}" type="number" min="0" max="99" inputmode="numeric" class="set-inp${ck?' ck':''}" value="${ck?saved.r:(prev?prev.r:'')}" placeholder="${ex.repsMin}" onfocus="this.select()"><input id="w-${i}" type="number" min="0" max="999" step="2.5" inputmode="decimal" class="set-inp${ck?' ck':''}" value="${ck?saved.w:(prev?prev.w:'0')}" placeholder="lb" onfocus="this.select()"><button class="chk-btn${ck?' done':''}" data-i="${i}">${ico('check')}</button>`;
     if (ck) row.style.opacity='.8';
     sc.appendChild(row);
   }
@@ -702,26 +702,30 @@ function showExercise() {
   wmc.innerHTML=`<div style="padding:12px 14px;display:flex;align-items:center;gap:12px"><div style="flex:1;font-size:13px">Working Max</div><input id="wm-inp" type="number" inputmode="decimal" style="width:80px" class="set-inp" value="${ex.workingMax||''}" placeholder="lb"><button id="wm-save" class="btn btn-ghost" style="padding:8px 12px;font-size:12px">Sauver</button></div>`;
   c.appendChild(wmc);
 
-  const nr=el('div',''); nr.style.cssText='display:flex;gap:8px;margin-top:14px';
+  renderNav('training');
+
+  // Barre fixe prev/next — au-dessus du nav
+  const exNav=el('div','ex-nav');
   if (prevEx) {
-    const pb=el('button','btn btn-ghost'); pb.style.flex='1';
-    pb.innerHTML=`${ico('back')} ${truncate(prevEx.name,14)}`;
+    const pb=el('button','btn btn-ghost'); pb.style.cssText='flex:1;font-size:13px';
+    pb.innerHTML=`${ico('back')} ${truncate(prevEx.name,13)}`;
     pb.addEventListener('click',()=>{ S.exId=prevEx.id; showExercise(); });
-    nr.appendChild(pb);
+    exNav.appendChild(pb);
+  } else {
+    const sp=el('div',''); sp.style.flex='1'; exNav.appendChild(sp);
   }
   if (nextEx) {
-    const nb=el('button','btn btn-primary'); nb.style.flex='1';
-    nb.innerHTML=`${truncate(nextEx.name,14)} ${ico('chevright')}`;
+    const nb=el('button','btn btn-primary'); nb.style.cssText='flex:1;font-size:13px';
+    nb.innerHTML=`${truncate(nextEx.name,13)} ${ico('chevright')}`;
     nb.addEventListener('click',()=>{ S.exId=nextEx.id; showExercise(); });
-    nr.appendChild(nb);
+    exNav.appendChild(nb);
   } else {
-    const fb=el('button','btn btn-primary'); fb.style.flex='1';
+    const fb=el('button','btn btn-primary'); fb.style.cssText='flex:1;font-size:13px';
     fb.innerHTML=`${ico('check')} Terminer la séance`;
     fb.addEventListener('click',()=>{ S.trainingDate=null; S.trainingSeance=null; S.exId=null; clearSession(); nav('calendar'); });
-    nr.appendChild(fb);
+    exNav.appendChild(fb);
   }
-  c.appendChild(nr);
-  renderNav('training');
+  a.appendChild(exNav);
 
   sc.querySelectorAll('.chk-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{

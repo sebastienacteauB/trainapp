@@ -921,11 +921,25 @@ function showLogModal(log) {
         <div style="display:flex;gap:5px;flex-wrap:wrap">${sets.map((s,i)=>`<span class="chip" style="font-size:11px">S${i+1}: ${s.r}×${s.w}lb</span>`).join('')}</div>
       </div>`;
     }).join('')}
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button id="log-edit" class="btn btn-primary" style="flex:1">${ico('edit')} Modifier la séance</button>
+      <button id="log-del" class="btn btn-ghost" style="padding:10px 12px;color:var(--err)">${ico('trash')}</button>
+    </div>
   `;
   ov.appendChild(m);
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{ if(e.target===ov) closeModal(); });
   $i('m-close').addEventListener('click',closeModal);
+  $i('log-edit').addEventListener('click',()=>{
+    S.trainingDate=log.date; S.trainingSeance=log.seance; S.exId=null;
+    saveSession(); closeModal(); nav('training');
+  });
+  $i('log-del').addEventListener('click',()=>{
+    if (!confirm(`Supprimer la séance ${log.seance} du ${fmtDate(log.date)} ?`)) return;
+    const idx=(p.logs||[]).findIndex(l=>l.date===log.date&&l.seance===log.seance);
+    if (idx!==-1) p.logs.splice(idx,1);
+    scheduleSave(); closeModal(); showCalendar();
+  });
 }
 
 // ── NAV (3 tabs) ─────────────────────────────────────────────

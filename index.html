@@ -76,16 +76,19 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .f-label{font-size:12px;color:var(--text2);margin-bottom:5px;display:block}
 .f-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rr);padding:10px 12px;color:var(--text);font-size:14px;outline:none;-webkit-appearance:none}
 .f-input:focus{border-color:var(--accent)}
-textarea.f-input{resize:vertical;min-height:68px;line-height:1.5}
-.f-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.f-group{margin-bottom:12px}
+textarea.f-input{resize:vertical;min-height:54px;line-height:1.5}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.f-group{margin-bottom:10px}
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:50;display:flex;align-items:flex-end;justify-content:center;max-width:480px;left:50%;transform:translateX(-50%)}
-.modal{background:var(--bg2);border-radius:20px 20px 0 0;padding:24px 20px;width:100%;max-height:92dvh;overflow-y:auto}
+.modal{background:var(--bg2);border-radius:20px 20px 0 0;padding:18px 16px;width:100%;max-height:92dvh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:600;margin-bottom:16px}
 .tabs{display:flex;gap:4px;background:var(--bg3);border-radius:var(--rr);padding:4px;margin-bottom:14px}
 .tab-btn{flex:1;padding:8px;border-radius:6px;border:none;background:transparent;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
 .tab-btn.on{background:var(--bg2);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .sec-ttl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:16px 0 8px}
+.resume-banner{background:var(--clrA2);border:1px solid var(--clrA3);border-radius:var(--rr);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.resume-banner-txt{flex:1;font-size:13px;font-weight:500;color:var(--text)}
+.resume-banner-sub{font-size:11px;color:var(--text2);margin-top:2px}
 .sec-ttl:first-child{margin-top:0}
 .lp{font-size:11px;color:var(--text3);padding:6px 14px 10px;border-top:1px solid var(--border)}
 .empty{text-align:center;padding:60px 24px;color:var(--text3)}
@@ -205,6 +208,20 @@ function scheduleSave() {
 }
 
 function prof() { return S.profile; }
+
+function saveSession() {
+  if (S.trainingDate&&S.trainingSeance) {
+    try { localStorage.setItem('ta_sess',JSON.stringify({d:S.trainingDate,s:S.trainingSeance,e:S.exId||null})); } catch(e) {}
+  }
+}
+function clearSession() { try { localStorage.removeItem('ta_sess'); } catch(e) {} }
+function restoreSession() {
+  try {
+    const raw=localStorage.getItem('ta_sess'); if (!raw) return;
+    const {d,s,e}=JSON.parse(raw);
+    if (d&&s) { S.trainingDate=d; S.trainingSeance=s; S.exId=e||null; }
+  } catch(e) {}
+}
 
 // ── HELPERS ─────────────────────────────────────────────────
 function todayStr() { return new Date().toISOString().slice(0,10); }
@@ -375,6 +392,21 @@ function showCalendar() {
 
   const c=el('div','screen');
   a.appendChild(c);
+
+  // RESUME BANNER (session en cours au relaunch)
+  if (S.trainingDate&&S.trainingSeance) {
+    const sc=S.trainingSeance;
+    const banner=el('div','resume-banner');
+    const dot=el('div','cal-badge d'+sc); dot.textContent=sc; dot.style.cssText='width:32px;height:30px;font-size:14px;border-radius:7px;flex-shrink:0';
+    const txt=el('div',''); txt.className='resume-banner-txt';
+    txt.innerHTML=`<div>Séance ${sc} en cours</div><div class="resume-banner-sub">${fmtDate(S.trainingDate)} — non terminée</div>`;
+    const btn=el('button','btn btn-primary'); btn.style.cssText='padding:8px 14px;font-size:13px;flex-shrink:0'; btn.textContent='Reprendre';
+    btn.addEventListener('click',()=>{ S.exId=S.exId||null; nav('training'); });
+    const xBtn=el('button','btn btn-ghost'); xBtn.style.cssText='padding:6px 10px;font-size:13px;flex-shrink:0;color:var(--text3)'; xBtn.textContent='✕';
+    xBtn.addEventListener('click',()=>{ S.trainingDate=null; S.trainingSeance=null; S.exId=null; clearSession(); banner.remove(); });
+    banner.append(dot,txt,btn,xBtn);
+    c.appendChild(banner);
+  }
 
   // TODAY CARD
   const todaySe=seanceForDate(p,today);
@@ -685,7 +717,7 @@ function showExercise() {
   } else {
     const fb=el('button','btn btn-primary'); fb.style.flex='1';
     fb.innerHTML=`${ico('check')} Terminer la séance`;
-    fb.addEventListener('click',()=>{ S.trainingDate=null; S.trainingSeance=null; nav('calendar'); });
+    fb.addEventListener('click',()=>{ S.trainingDate=null; S.trainingSeance=null; S.exId=null; clearSession(); nav('calendar'); });
     nr.appendChild(fb);
   }
   c.appendChild(nr);
@@ -822,7 +854,7 @@ function showExModal(exId) {
     <div id="img-preview" style="margin-bottom:8px;border-radius:8px;overflow:hidden;background:var(--bg3);min-height:48px;display:flex;align-items:center;justify-content:center">
       ${ex&&ex.customImg?`<img src="${ex.customImg}" style="width:100%;max-height:160px;object-fit:cover">`:`<span style="font-size:12px;color:var(--text3);padding:12px">Aucune image</span>`}
     </div>
-    <input type="file" id="f-img" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="f-img" accept="image/*" style="display:none">
     <div style="display:flex;gap:8px">
       <button type="button" id="img-pick" class="btn btn-ghost" style="flex:1;font-size:13px">📷 Choisir / prendre une photo</button>
       <button type="button" id="img-clear" class="btn btn-ghost" style="padding:8px 10px;color:var(--err);font-size:13px${ex&&ex.customImg?'':';display:none'}">✕</button>
@@ -912,6 +944,7 @@ function renderNav(active) {
 // ── ROUTER ───────────────────────────────────────────────────
 function nav(route) {
   S.route=route;
+  if (route==='training'||route==='exercise') saveSession();
   ({calendar:showCalendar,training:showTraining,exercise:showExercise,program:showProgram}[route]||showCalendar)();
 }
 
@@ -937,6 +970,7 @@ onAuthStateChanged(auth, async (user) => {
       console.error('Load error',e);
       S.profile=buildProfile(user);
     }
+    restoreSession();
     nav('calendar');
   } else {
     S.user=null; S.profile=null;

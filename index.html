@@ -63,7 +63,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .tot-card{flex:1;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border);padding:10px 12px;text-align:center}
 .tot-val{font-size:20px;font-weight:600}
 .tot-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
-.ex-nav{position:fixed;bottom:var(--navh);left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg2);border-top:1px solid var(--border);display:flex;gap:8px;z-index:25;padding:8px 12px;box-shadow:0 -2px 10px rgba(0,0,0,.07)}
+.ex-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg2);border-top:1px solid var(--border);display:flex;gap:8px;z-index:30;padding:8px 12px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px));box-shadow:0 -2px 10px rgba(0,0,0,.07)}
 .demo-row{display:flex;gap:8px;padding:12px 14px 4px}
 .demo-img{flex:1;aspect-ratio:4/3;object-fit:cover;border-radius:var(--rr);background:var(--bg3);min-width:0}
 .demo-ph{flex:1;aspect-ratio:4/3;border-radius:var(--rr);background:var(--bg3);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);font-size:11px;text-align:center;padding:8px}
@@ -80,7 +80,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 textarea.f-input{resize:vertical;min-height:54px;line-height:1.5}
 .f-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .f-group{margin-bottom:10px}
-.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:50;display:flex;align-items:flex-end;justify-content:center;max-width:480px;left:50%;transform:translateX(-50%)}
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .modal{background:var(--bg2);border-radius:20px 20px 0 0;padding:18px 16px;width:100%;max-height:92dvh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:600;margin-bottom:16px}
 .tabs{display:flex;gap:4px;background:var(--bg3);border-radius:var(--rr);padding:4px;margin-bottom:14px}
@@ -649,7 +649,7 @@ function showExercise() {
   $i('back').addEventListener('click',()=>nav('training'));
 
   const c=el('div','screen');
-  c.style.paddingBottom=`calc(var(--navh) + var(--ex-navh) + 16px)`;
+  c.style.paddingBottom=`calc(var(--ex-navh) + env(safe-area-inset-bottom,0px) + 24px)`;
   a.appendChild(c);
 
   if (ex.customImg) {
@@ -702,9 +702,7 @@ function showExercise() {
   wmc.innerHTML=`<div style="padding:12px 14px;display:flex;align-items:center;gap:12px"><div style="flex:1;font-size:13px">Working Max</div><input id="wm-inp" type="number" inputmode="decimal" style="width:80px" class="set-inp" value="${ex.workingMax||''}" placeholder="lb"><button id="wm-save" class="btn btn-ghost" style="padding:8px 12px;font-size:12px">Sauver</button></div>`;
   c.appendChild(wmc);
 
-  renderNav('training');
-
-  // Barre fixe prev/next — au-dessus du nav
+  // Barre fixe prev/next — bas de l'écran (nav principal masqué sur écran exercice)
   const exNav=el('div','ex-nav');
   if (prevEx) {
     const pb=el('button','btn btn-ghost'); pb.style.cssText='flex:1;font-size:13px';

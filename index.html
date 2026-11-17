@@ -215,7 +215,9 @@ function saveSession() {
     try { localStorage.setItem('ta_sess',JSON.stringify({d:S.trainingDate,s:S.trainingSeance,e:S.exId||null})); } catch(e) {}
   }
 }
-function clearSession() { try { localStorage.removeItem('ta_sess'); } catch(e) {} }
+function clearSession() { try { localStorage.removeItem('ta_sess'); localStorage.removeItem('ta_route'); } catch(e) {} }
+function saveRoute() { try { localStorage.setItem('ta_route',S.route||'calendar'); } catch(e) {} }
+function restoreRoute() { try { return localStorage.getItem('ta_route')||'calendar'; } catch(e) { return 'calendar'; } }
 function restoreSession() {
   try {
     const raw=localStorage.getItem('ta_sess'); if (!raw) return;
@@ -396,7 +398,7 @@ function showCalendar() {
   hdr.innerHTML=`<div class="hdr-title">Calendrier</div>
     <button id="av" class="avatar" style="background:${p.color}25;color:${p.color}">${p.initials}</button>`;
   a.appendChild(hdr);
-  $i('av').addEventListener('click',()=>{ if(confirm('Se déconnecter ?')) signOut(auth); });
+  $i('av').addEventListener('click',()=>showProfileModal(p));
 
   const c=el('div','screen');
   a.appendChild(c);
@@ -801,7 +803,7 @@ function showProgram() {
   hdr.innerHTML=`<div style="flex:1"><div class="hdr-title">Programme</div><div class="hdr-sub">${p.name}</div></div>
     <button id="av" class="avatar" style="background:${p.color}25;color:${p.color}">${p.initials}</button>`;
   a.appendChild(hdr);
-  $i('av').addEventListener('click',()=>{ if(confirm('Se déconnecter ?')) signOut(auth); });
+  $i('av').addEventListener('click',()=>showProfileModal(p));
 
   const c=el('div','screen');
   a.appendChild(c);
@@ -919,6 +921,63 @@ function showExModal(exId) {
   });
 }
 
+function showProfileModal(p){
+  const logs=p.logs||[];
+  const totalSessions=logs.length;
+  const totalReps=logs.reduce((a,l)=>a+(l.totalReps||0),0);
+  const totalLb=logs.reduce((a,l)=>a+(l.totalLb||0),0);
+  const efforts=logs.filter(l=>l.effort).map(l=>l.effort);
+  const avgEffort=efforts.length?(efforts.reduce((a,e)=>a+e,0)/efforts.length).toFixed(1):null;
+  const byMonth={};
+  for(const l of logs){
+    const ym=l.date.slice(0,7);
+    if(!byMonth[ym]) byMonth[ym]={reps:0,lb:0,count:0,A:0,B:0};
+    byMonth[ym].reps+=l.totalReps||0; byMonth[ym].lb+=l.totalLb||0; byMonth[ym].count++;
+    if(l.seance) byMonth[ym][l.seance]=(byMonth[ym][l.seance]||0)+1;
+  }
+  const months=Object.keys(byMonth).sort().reverse().slice(0,12);
+  const ov=el('div','modal-ov'); ov.id='modal-ov';
+  const m=el('div','modal');
+  m.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <div style="width:44px;height:44px;border-radius:12px;background:${p.color}25;color:${p.color};display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;flex-shrink:0">${p.initials}</div>
+      <div style="flex:1"><div style="font-size:15px;font-weight:600">${p.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px">Depuis ${fmtDate(p.startDate||todayStr())}</div></div>
+      <button id="m-close" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px;line-height:1;flex-shrink:0">✕</button>
+    </div>
+    <div class="sec-ttl" style="margin-top:0">Statistiques globales</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px">
+      <div class="card" style="padding:12px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--accent)">${totalSessions}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Séances</div></div>
+      <div class="card" style="padding:12px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--accent2)">${totalLb.toLocaleString()}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Lb soulevés</div></div>
+      <div class="card" style="padding:12px;text-align:center"><div style="font-size:22px;font-weight:700">${totalReps.toLocaleString()}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Répétitions</div></div>
+      <div class="card" style="padding:12px;text-align:center"><div style="font-size:22px;font-weight:700;color:${avgEffort?'var(--ok)':'var(--text3)'}">${avgEffort||'—'}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Effort moy. /10</div></div>
+    </div>
+    ${months.length?`
+    <div class="sec-ttl">Historique mensuel</div>
+    <div style="border-radius:var(--r);overflow:hidden;border:1px solid var(--border);margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:6px;padding:7px 12px;background:var(--bg3);font-size:11px;font-weight:600;color:var(--text3)">
+        <div>Mois</div><div style="text-align:right">Séances</div><div style="text-align:right">Reps</div><div style="text-align:right">Lb</div>
+      </div>
+      ${months.map(ym=>{
+        const [y,mo]=ym.split('-');
+        const lbl=`${MONTHS_F[parseInt(mo)-1].slice(0,3)} ${y}`;
+        const d=byMonth[ym];
+        return `<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:6px;padding:7px 12px;border-top:1px solid var(--border)">
+          <div style="font-size:13px">${lbl}</div>
+          <div style="font-size:13px;text-align:right;color:var(--text2)">${d.count}</div>
+          <div style="font-size:13px;text-align:right;color:var(--text2)">${d.reps.toLocaleString()}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--accent2);text-align:right">${d.lb.toLocaleString()}</div>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+    <button id="signout-btn" class="btn btn-ghost" style="width:100%;color:var(--err)">Se déconnecter</button>
+  `;
+  ov.appendChild(m);
+  document.getElementById('app').appendChild(ov);
+  ov.addEventListener('click',e=>{ if(e.target===ov) closeModal(); });
+  m.querySelector('#m-close').addEventListener('click',closeModal);
+  m.querySelector('#signout-btn').addEventListener('click',()=>{ closeModal(); signOut(auth); });
+}
 function showEffortModal(date,seance,p){
   const ov=el('div','modal-ov'); ov.id='modal-ov';
   const m=el('div','modal');
@@ -998,6 +1057,7 @@ function renderNav(active) {
 // ── ROUTER ───────────────────────────────────────────────────
 function nav(route) {
   S.route=route;
+  saveRoute();
   if (route==='training'||route==='exercise') saveSession();
   ({calendar:showCalendar,training:showTraining,exercise:showExercise,program:showProgram}[route]||showCalendar)();
 }
@@ -1025,7 +1085,10 @@ onAuthStateChanged(auth, async (user) => {
       S.profile=buildProfile(user);
     }
     restoreSession();
-    nav('calendar');
+    const _r=restoreRoute();
+    if ((_r==='training'||_r==='exercise')&&S.trainingDate&&S.trainingSeance) nav(_r);
+    else if (_r==='program') nav('program');
+    else nav('calendar');
   } else {
     S.user=null; S.profile=null;
     showAuth();

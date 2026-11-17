@@ -225,7 +225,8 @@ function restoreSession() {
 }
 
 // ── HELPERS ─────────────────────────────────────────────────
-function todayStr() { return new Date().toISOString().slice(0,10); }
+function dateStr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function todayStr() { return dateStr(new Date()); }
 function fmtDate(ds) {
   const d = new Date(ds+'T12:00:00');
   return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
@@ -269,7 +270,7 @@ function nextAvailableSession(p) {
   const today = new Date();
   for (let i=0; i<14; i++) {
     const d = new Date(today); d.setDate(today.getDate()+i);
-    const ds = d.toISOString().slice(0,10);
+    const ds = dateStr(d);
     const s  = seanceForDate(p,ds);
     if (s && !(p.logs||[]).find(l=>l.date===ds&&l.seance===s)) return {date:ds,seance:s};
   }
@@ -288,6 +289,12 @@ function calcTotals(sets) {
   let reps=0,lb=0;
   for (const s of Object.values(sets||{})) for (const x of (s||[])) { reps+=x.r||0; lb+=(x.r||0)*(x.w||0); }
   return {reps,lb};
+}
+function calcCompletion(logSets,exercises){
+  const total=exercises.reduce((a,ex)=>a+parseSetsMax(ex.sets),0);
+  if(!total) return 0;
+  const done=exercises.reduce((a,ex)=>a+(logSets[ex.id]||[]).filter(Boolean).length,0);
+  return Math.min(100,Math.round(done/total*100));
 }
 
 // ── PROFILE BUILDER (first login) ──────────────────────────
@@ -315,7 +322,7 @@ function buildProfile(user) {
     name:dn,
     initials:dn.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(),
     color:'#a855f7',
-    startDate:new Date().toISOString().slice(0,10),
+    startDate:todayStr(),
     trainingDays:[1,3,5],notes:'',
     seances:{A:[],B:[]},logs:[]
   };
@@ -418,7 +425,7 @@ function showCalendar() {
     tc.innerHTML=`<div style="display:flex;align-items:center;gap:12px">
       <div class="cal-badge d${todayLg.seance}" style="width:36px;height:34px;font-size:15px;border-radius:8px">${todayLg.seance}</div>
       <div style="flex:1"><div style="font-size:14px;font-weight:600">Séance ${todayLg.seance} terminée ✓</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:2px">${tots.reps} reps · ${tots.lb} lb</div></div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">${tots.lb} lb · ${calcCompletion(todayLg.sets,p.seances[todayLg.seance]||[])}%${todayLg.effort?` · 💪 ${todayLg.effort}/10`:''}</div></div>
       <button class="btn btn-ghost" id="td-hist" style="font-size:12px;padding:6px 10px">Détails</button>
     </div>`;
     c.appendChild(tc);
@@ -478,7 +485,7 @@ function showCalendar() {
     for(let i=0;i<=31;i++){
       const d=new Date(startD);d.setDate(startD.getDate()+i);
       if(d.getFullYear()!==year||d.getMonth()!==month) break;
-      const ds=d.toISOString().slice(0,10);
+      const ds=dateStr(d);
       if(ds===today) continue;
       const s=seanceForDate(p,ds);
       if(s&&!(p.logs||[]).find(l=>l.date===ds)) return ds;
@@ -523,6 +530,7 @@ function showCalendar() {
     <div class="cal-leg-item"><div class="cal-badge dA" style="width:20px;height:18px;font-size:9px">A</div> Réalisé</div>
     <div class="cal-leg-item"><div class="cal-badge cup" style="width:20px;height:18px;font-size:9px">A</div> Rattrapage</div>
     <div class="cal-leg-item"><div class="cal-badge pA" style="width:20px;height:18px;font-size:9px">A</div> Planifié</div>
+    <div class="cal-leg-item"><div style="width:20px;height:18px;border:1.5px dashed var(--accent);border-radius:4px"></div> Prochain</div>
   `;
   c.appendChild(leg);
   renderNav('calendar');
@@ -588,10 +596,11 @@ function showTraining() {
   const c=el('div','screen');
   a.appendChild(c);
   const tr=el('div','tots'); tr.id='tot-row';
-  tr.innerHTML=`<div class="tot-card"><div class="tot-val" id="tv-reps">${tots.reps}</div><div class="tot-lbl">Reps</div></div><div class="tot-card"><div class="tot-val" style="color:var(--accent2)" id="tv-lb">${tots.lb}</div><div class="tot-lbl">Lb</div></div><div class="tot-card"><div class="tot-val" id="tv-done">${doneCount}/${exercises.length}</div><div class="tot-lbl">Faits</div></div>`;
+  const pct=calcCompletion(logSets,exercises);
+  tr.innerHTML=`<div class="tot-card"><div class="tot-val" id="tv-reps">${tots.reps}</div><div class="tot-lbl">Reps</div></div><div class="tot-card"><div class="tot-val" style="color:var(--accent2)" id="tv-lb">${tots.lb}</div><div class="tot-lbl">Lb totaux</div></div><div class="tot-card"><div class="tot-val" id="tv-done">${pct}%</div><div class="tot-lbl">Complété</div></div>`;
   c.appendChild(tr);
   const bar=el('div','prog-bar');
-  bar.innerHTML=`<div class="prog-fill" id="prog" style="width:${exercises.length?doneCount/exercises.length*100:0}%"></div>`;
+  bar.innerHTML=`<div class="prog-fill" id="prog" style="width:${pct}%"></div>`;
   c.appendChild(bar);
 
   if (!exercises.length) { c.innerHTML+='<div class="empty" style="padding:32px 0"><span class="empty-ico">📋</span><div>Aucun exercice — configure dans Programme</div></div>'; }
@@ -669,6 +678,13 @@ function showExercise() {
   const chips=el('div','chips');
   chips.innerHTML=`<span class="chip">${ex.sets} sets</span><span class="chip">${ex.repsMin}–${ex.repsMax} reps</span>${ex.workingMax?`<span class="chip wm" id="wm-chip">WM ${ex.workingMax} lb</span>`:''}`;
   c.appendChild(chips);
+  const sessLb=log?calcTotals(log.sets).lb:0;
+  const sessPct=calcCompletion(log?log.sets:{},exercises);
+  const sessRow=el('div');
+  sessRow.id='sess-row';
+  sessRow.style.cssText='display:flex;justify-content:space-between;padding:4px 2px;margin-bottom:2px';
+  sessRow.innerHTML=`<span style="font-size:12px;color:var(--text3)">Session: <strong style="color:var(--text2)" id="ex-sess-lb">${sessLb}</strong> lb</span><span style="font-size:12px;color:var(--text3)"><strong style="color:var(--accent2)" id="ex-sess-pct">${sessPct}</strong>% complété</span>`;
+  c.appendChild(sessRow);
 
   if (ex.notes) {
     const n=el('div','card'); n.style.marginBottom='12px';
@@ -720,7 +736,7 @@ function showExercise() {
   } else {
     const fb=el('button','btn btn-primary'); fb.style.cssText='flex:1;font-size:13px';
     fb.innerHTML=`${ico('check')} Terminer la séance`;
-    fb.addEventListener('click',()=>{ S.trainingDate=null; S.trainingSeance=null; S.exId=null; clearSession(); nav('calendar'); });
+    fb.addEventListener('click',()=>showEffortModal(date,seance,p));
     exNav.appendChild(fb);
   }
   a.appendChild(exNav);
@@ -756,9 +772,12 @@ function showExercise() {
       const rEl=$i('tv-reps'), lEl=$i('tv-lb'), dEl=$i('tv-done'), pg=$i('prog');
       if(rEl) rEl.textContent=t.reps;
       if(lEl) lEl.textContent=t.lb;
-      const dc=Object.keys(lg.sets).length;
-      if(dEl) dEl.textContent=`${dc}/${exercises.length}`;
-      if(pg) pg.style.width=`${exercises.length?dc/exercises.length*100:0}%`;
+      const pct2=calcCompletion(lg.sets,exercises);
+      if(dEl) dEl.textContent=`${pct2}%`;
+      if(pg) pg.style.width=`${pct2}%`;
+      const sexLb=$i('ex-sess-lb'),sexPct=$i('ex-sess-pct');
+      if(sexLb) sexLb.textContent=t.lb;
+      if(sexPct) sexPct.textContent=pct2;
     });
   });
 
@@ -900,6 +919,25 @@ function showExModal(exId) {
   });
 }
 
+function showEffortModal(date,seance,p){
+  const ov=el('div','modal-ov'); ov.id='modal-ov';
+  const m=el('div','modal');
+  m.innerHTML=`<div class="modal-title">Fin de séance 💪</div>
+  <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Effort perçu sur 10 :</div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px">
+    ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="btn btn-ghost effort-btn" data-n="${n}" style="font-size:18px;font-weight:700;padding:14px 0">${n}</button>`).join('')}
+  </div>
+  <button id="skip-effort" class="btn btn-ghost" style="width:100%;color:var(--text3);font-size:13px">Passer</button>`;
+  ov.appendChild(m);
+  document.getElementById('app').appendChild(ov);
+  const finish=(effort)=>{
+    if(effort!==null){const lg=activeLog(p,date,seance);if(lg){lg.effort=effort;scheduleSave();}}
+    closeModal();
+    S.trainingDate=null;S.trainingSeance=null;S.exId=null;clearSession();nav('calendar');
+  };
+  m.querySelectorAll('.effort-btn').forEach(btn=>btn.addEventListener('click',()=>finish(parseInt(btn.dataset.n))));
+  m.querySelector('#skip-effort').addEventListener('click',()=>finish(null));
+}
 function closeModal() { const o=$i('modal-ov'); if(o) o.remove(); }
 
 // ── LOG DETAIL MODAL ─────────────────────────────────────────
@@ -913,7 +951,7 @@ function showLogModal(log) {
     <div style="display:flex;align-items:center;margin-bottom:16px">
       <div style="width:38px;height:38px;border-radius:9px;background:${log.seance==='A'?'var(--clrA2)':'var(--clrB2)'};color:${log.seance==='A'?'var(--clrA)':'var(--clrB)'};display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;margin-right:12px;flex-shrink:0">${log.seance}</div>
       <div style="flex:1"><div style="font-size:15px;font-weight:600">${fmtDate(log.date)}</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:2px">${doneEx} exercice${doneEx>1?'s':''} · ${log.totalReps||0} reps · ${log.totalLb||0} lb</div></div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">${log.totalLb||0} lb · ${calcCompletion(log.sets||{},exercises)}%${log.effort?` · 💪 ${log.effort}/10`:''}</div></div>
       <button id="m-close" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px;line-height:1;flex-shrink:0">✕</button>
     </div>
     ${Object.entries(log.sets||{}).map(([eid,sets])=>{

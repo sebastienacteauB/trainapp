@@ -37,6 +37,9 @@
 .tog.off::before{left:3px}
 .tog.on::before{left:21px}
 .rest-bar{position:fixed;bottom:calc(var(--ex-navh) + 1px);left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:28;background:var(--bg2);border-top:1px solid var(--border);padding:7px 14px;display:flex;align-items:center;gap:10px}
+@keyframes rest-pulse{0%,100%{background:var(--accent)}50%{background:var(--err)}}
+.rest-urgent{animation:rest-pulse .5s ease-in-out infinite}
+.hdr-stat{text-align:right;flex-shrink:0}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.5;overscroll-behavior:none}
 #app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
 .screen{flex:1;padding:16px 16px calc(var(--navh)+24px);overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -242,6 +245,23 @@ function restoreSession() {
 function applyTheme(){const t=localStorage.getItem('ta_theme')||'light';document.documentElement.setAttribute('data-theme',t);}
 function toggleTheme(){const c=localStorage.getItem('ta_theme')||'light';const t=c==='dark'?'light':'dark';localStorage.setItem('ta_theme',t);applyTheme();}
 let _restTimer=null;
+function syncHdrTimer(){
+  const bar=document.getElementById('hdr-timer-bar');
+  if(!bar) return;
+  if(!_restTimer){bar.style.display='none';bar.classList.remove('rest-urgent');return;}
+  const {rem,restSec}=_restTimer;
+  bar.style.display='block';
+  bar.style.transition='none';
+  bar.style.width=`${Math.max(0,rem/restSec)*100}%`;
+  bar.classList.toggle('rest-urgent',rem>0&&rem<=5);
+  requestAnimationFrame(()=>{bar.style.transition=`width ${rem}s linear`;bar.style.width='0%';});
+}
+function animateCount(el,from,to,ms=500){
+  if(!el||from===to){if(el)el.textContent=to;return;}
+  const t0=performance.now();
+  const step=ts=>{const p=Math.min((ts-t0)/ms,1),e=1-(1-p)**3;el.textContent=Math.round(from+(to-from)*e);if(p<1)requestAnimationFrame(step);};
+  requestAnimationFrame(step);
+}
 function startRestTimer(){
   const restSec=parseInt(localStorage.getItem('ta_rest')||'90');
   if(!restSec) return;
@@ -249,14 +269,26 @@ function startRestTimer(){
   const bar=document.createElement('div');
   bar.className='rest-bar';
   bar.innerHTML=`<span style="font-size:11px;font-weight:700;color:var(--text3);white-space:nowrap;text-transform:uppercase;letter-spacing:.05em">Repos</span><div style="flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden"><div id="rt-fill" style="height:100%;background:var(--accent);border-radius:2px;width:100%;transition:width ${restSec}s linear"></div></div><span id="rt-cnt" style="font-size:13px;font-weight:700;color:var(--text2);min-width:28px;text-align:right">${restSec}s</span><button id="rt-dismiss" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:17px;line-height:1;padding:0 0 0 4px;flex-shrink:0">✕</button>`;
-  document.getElementById('app').appendChild(bar);
+  document.body.appendChild(bar);
   requestAnimationFrame(()=>requestAnimationFrame(()=>{const f=document.getElementById('rt-fill');if(f)f.style.width='0%';}));
   let rem=restSec;
-  const id=setInterval(()=>{rem--;const cnt=document.getElementById('rt-cnt');if(cnt)cnt.textContent=rem+'s';if(rem<=0)cancelRestTimer();},1000);
-  _restTimer={id,el:bar};
-  document.getElementById('rt-dismiss').addEventListener('click',cancelRestTimer);
+  _restTimer={restSec,rem,id:null,el:bar};
+  const id=setInterval(()=>{
+    rem--;_restTimer.rem=rem;
+    const cnt=document.getElementById('rt-cnt');if(cnt)cnt.textContent=rem+'s';
+    if(rem>0&&rem<=5){
+      const fill=document.getElementById('rt-fill');
+      if(fill)fill.style.background='var(--err)';
+      bar.classList.add('rest-urgent');
+    }
+    syncHdrTimer();
+    if(rem<=0)cancelRestTimer();
+  },1000);
+  _restTimer.id=id;
+  bar.querySelector('#rt-dismiss').addEventListener('click',cancelRestTimer);
+  syncHdrTimer();
 }
-function cancelRestTimer(){if(_restTimer){clearInterval(_restTimer.id);_restTimer.el?.remove();_restTimer=null;}}
+function cancelRestTimer(){if(_restTimer){clearInterval(_restTimer.id);_restTimer.el?.remove();_restTimer=null;}syncHdrTimer();}
 
 // ── HELPERS ─────────────────────────────────────────────────
 function dateStr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
@@ -316,7 +348,12 @@ function activeLog(p, date, seance) {
 }
 function lastSets(p, exId) {
   const logs = [...(p.logs||[])].sort((a,b)=>b.date.localeCompare(a.date));
-  for (const l of logs) if (l.sets&&l.sets[exId]) return l.sets[exId];
+  for (const l of logs) {
+    const s=l.sets&&l.sets[exId]; if(!s) continue;
+    const arr=Array.isArray(s)?s:Object.values(s);
+    const compact=arr.filter(x=>x&&(x.r||x.w));
+    if(compact.length) return compact;
+  }
   return null;
 }
 function calcTotals(sets) {
@@ -684,12 +721,25 @@ function showExercise() {
   const numSets=parseSetsMax(ex.sets);
 
   const a=getApp(); a.innerHTML='';
+  const sessLb=log?calcTotals(log.sets).lb:0;
+  const sessPct=calcCompletion(log?log.sets:{},exercises);
   const hdr=el('div','hdr');
+  hdr.style.height='auto'; hdr.style.paddingTop='10px'; hdr.style.paddingBottom='10px';
   hdr.innerHTML=`<button class="back-btn" id="back">${ico('back')}</button>
-    <div style="flex:1"><div class="hdr-title" style="font-size:15px">${ex.name}</div>
-    <div class="hdr-sub"><span class="seance-pill ${seance}">Séance ${seance}</span><span>${exIdx+1}/${exercises.length}</span></div></div>`;
+    <div style="flex:1;position:relative;min-width:0">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div class="hdr-title" style="font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${ex.name}</div>
+        <div style="display:flex;gap:12px;flex-shrink:0">
+          <div class="hdr-stat"><div id="hdr-lb" style="font-size:17px;font-weight:700;color:var(--accent);line-height:1">${sessLb}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px">lb</div></div>
+          <div class="hdr-stat"><div id="hdr-pct" style="font-size:17px;font-weight:700;color:var(--accent2);line-height:1">${sessPct}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px">%</div></div>
+        </div>
+      </div>
+      <div class="hdr-sub" style="margin-top:4px"><span class="seance-pill ${seance}">Séance ${seance}</span><span>${exIdx+1}/${exercises.length}</span></div>
+      <div id="hdr-timer-bar" style="position:absolute;bottom:-1px;left:0;height:3px;width:0%;display:none;border-radius:0 2px 2px 0"></div>
+    </div>`;
   a.appendChild(hdr);
   $i('back').addEventListener('click',()=>nav('training'));
+  syncHdrTimer();
 
   const c=el('div','screen');
   c.style.paddingBottom=`calc(var(--ex-navh) + env(safe-area-inset-bottom,0px) + 24px)`;
@@ -712,14 +762,6 @@ function showExercise() {
   const chips=el('div','chips');
   chips.innerHTML=`<span class="chip">${ex.sets} sets</span><span class="chip">${ex.repsMin}–${ex.repsMax} reps</span>${ex.workingMax?`<span class="chip wm" id="wm-chip">WM ${ex.workingMax} lb</span>`:''}`;
   c.appendChild(chips);
-  const sessLb=log?calcTotals(log.sets).lb:0;
-  const sessPct=calcCompletion(log?log.sets:{},exercises);
-  const sessRow=el('div');
-  sessRow.id='sess-row';
-  sessRow.style.cssText='display:flex;justify-content:space-between;padding:4px 2px;margin-bottom:2px';
-  sessRow.innerHTML=`<span style="font-size:12px;color:var(--text3)">Session: <strong style="color:var(--text2)" id="ex-sess-lb">${sessLb}</strong> lb</span><span style="font-size:12px;color:var(--text3)"><strong style="color:var(--accent2)" id="ex-sess-pct">${sessPct}</strong>% complété</span>`;
-  c.appendChild(sessRow);
-
   if (ex.notes) {
     const n=el('div','card'); n.style.marginBottom='12px';
     n.innerHTML=`<div style="padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.6">${ex.notes}</div>`;
@@ -811,9 +853,9 @@ function showExercise() {
       const pct2=calcCompletion(lg.sets,exercises);
       if(dEl) dEl.textContent=`${pct2}%`;
       if(pg) pg.style.width=`${pct2}%`;
-      const sexLb=$i('ex-sess-lb'),sexPct=$i('ex-sess-pct');
-      if(sexLb) sexLb.textContent=t.lb;
-      if(sexPct) sexPct.textContent=pct2;
+      const hLb=$i('hdr-lb'),hPct=$i('hdr-pct');
+      if(hLb) animateCount(hLb,parseInt(hLb.textContent)||0,t.lb);
+      if(hPct) animateCount(hPct,parseInt(hPct.textContent)||0,pct2);
     });
   });
 
